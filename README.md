@@ -1,23 +1,56 @@
-This directory contains the BaxiCHAT Agentic workflow. Which is driving the entire BaciCHAT inference flow.
-To see how it works start with the file
+# Microflow
 
+A lightweight event-driven workflow system for building AI agents and processing pipelines in just 60 lines of Python.
+
+## Installation
+
+```bash
+pip install microflow
 ```
-config.py
+
+## Quick Start
+
+```python
+import asyncio
+from microflow import WorkflowManager, WorkflowEvent
+
+# Create a workflow manager
+workflow = WorkflowManager()
+
+# Define a handler
+async def greeting_handler(event, ctx):
+    name = event.data.get("name", "World")
+    yield WorkflowEvent.progress("greeting", f"Processing greeting for {name}")
+    yield WorkflowEvent(name="completed", data={"message": f"Hello, {name}!"})
+
+# Register the handler
+workflow.register("greet", greeting_handler)
+
+# Run the workflow
+async def main():
+    initial_event = WorkflowEvent(name="greet", data={"name": "Alice"})
+    
+    async for event in workflow.process(initial_event):
+        if event.name == "progress":
+            print(f"Progress: {event.data['step']} - {event.data['description']}")
+        elif event.name == "completed":
+            print(f"Result: {event.data['message']}")
+
+if __name__ == "__main__":
+    asyncio.run(main())
 ```
 
-for more information about the Workflow system, read below:
+## Features
 
-
-# Event-Driven Workflow System
-
-This system implements an event-driven workflow architecture where multiple handlers can process events in sequence, providing a flexible way to build complex processing pipelines.
+- **Event-Driven Architecture**: Chain operations through events
+- **Progress Reporting**: Built-in support for progress updates
+- **Error Handling**: Graceful error propagation
+- **Flexible Workflows**: Easily modify and extend workflows
+- **Minimal Dependencies**: No external dependencies required
 
 ## Core Components
 
-the entire framework is just 80 lines of python code, located in this repository in two files.
-
-- src/workflow/manager.py
-- src/workflow/event.py
+The entire framework is just 60 lines of Python code, consisting of two main components:
 
 ### WorkflowEvent
 
@@ -71,7 +104,7 @@ workflow.register("event1", handler1).register("event2", handler2)
 An event handler is an async function that takes a `WorkflowEvent` and yields one or more events:
 
 ```python
-async def search_handler(event: WorkflowEvent) -> AsyncGenerator[WorkflowEvent, None]:
+async def search_handler(event: WorkflowEvent, ctx: Dict[str, Any]) -> AsyncGenerator[WorkflowEvent, None]:
     # Report progress
     yield WorkflowEvent.progress("search", "Searching for information...")
     
@@ -99,17 +132,13 @@ Handlers chain together by yielding events that trigger other handlers:
 Special handling for progress events allows for status updates without breaking the chain:
 
 ```python
-async def complex_handler(event: WorkflowEvent):
+async def complex_handler(event: WorkflowEvent, ctx: Dict[str, Any]):
     # Report progress without changing workflow direction
     yield WorkflowEvent.progress("step1", "Starting processing...")
     
-    # Do some work
-    await some_operation()
+    # Do some work...
     
     yield WorkflowEvent.progress("step2", "Halfway done...")
-    
-    # Do more work
-    await another_operation()
     
     # Continue the workflow with a new event
     yield WorkflowEvent(name="next_step", data={"result": "success"})
@@ -120,7 +149,7 @@ async def complex_handler(event: WorkflowEvent):
 Errors can be propagated through the workflow:
 
 ```python
-async def risky_handler(event: WorkflowEvent):
+async def risky_handler(event: WorkflowEvent, ctx: Dict[str, Any]):
     try:
         result = await risky_operation()
         yield WorkflowEvent(name="success", data={"result": result})
@@ -130,85 +159,10 @@ async def risky_handler(event: WorkflowEvent):
 
 ## Example Workflow
 
-```python
-import asyncio
-from src.workflow.event  import WorkflowManager
-from src.workflow.event import WorkflowEvent
-from typing import AsyncGenerator
+For more complex examples, see the [examples directory](https://github.com/vikramsoni2/microflow/tree/main/microflow/examples) which includes:
 
-# Create a workflow
-workflow = WorkflowManager()
-
-# Define some simple handlers
-async def greeting_handler(event: WorkflowEvent) -> AsyncGenerator[WorkflowEvent, None]:
-    print(f"Greeting: Hello, {event.data['name']}!")
-    
-    # Report progress
-    yield WorkflowEvent.progress("greeting", "Sending welcome message")
-    
-    # Continue to the next step
-    yield WorkflowEvent(
-        name="process_user",
-        data={"name": event.data["name"], "action": "welcome"},
-        metadata=event.metadata
-    )
-
-async def process_user_handler(event: WorkflowEvent) -> AsyncGenerator[WorkflowEvent, None]:
-    print(f"Processing user: {event.data['name']} with action: {event.data['action']}")
-    
-    # Report progress
-    yield WorkflowEvent.progress("processing", "Updating user records")
-    
-    # Complete the workflow
-    yield WorkflowEvent(
-        name="completed",
-        data={"result": f"User {event.data['name']} processed successfully"},
-        metadata=event.metadata
-    )
-
-# Register the handlers
-workflow.register("start", greeting_handler)
-workflow.register("process_user", process_user_handler)
-
-# Start the workflow with an initial event
-initial_event = WorkflowEvent(
-    name="start",
-    data={"name": "Alice"},
-    metadata={"session_id": "12345"}
-)
-
-# Process the workflow and handle events
-async def main():
-    async for event in workflow.process(initial_event):
-        if event.name == "progress":
-            print(f"Progress update: {event.data['step']} - {event.data['description']}")
-        elif event.name == "completed":
-            print(f"Workflow completed: {event.data['result']}")
-        elif event.name == "error":
-            print(f"Error occurred: {event.error}")
-
-
-# Run the main function as a stanalone script:
-if __name__ == "__main__":
-    asyncio.run(main())
-```
-
-## Testing Workflow Framework
-```sh
-pytest -xvs ./tests/test_workflow.py
-```
-
-## UV Environment Setup
-For testing use:
-```sh
-uv sync
-```
-
-For deployment use. Will not start with testing dependencies.
-```sh
-uv sync --no-dev
-```
-
+1. A simple agent workflow that processes queries, searches for information, and generates responses
+2. A weather assistant that analyzes queries, fetches weather data, and generates streaming responses
 
 ## Benefits
 
@@ -217,3 +171,6 @@ uv sync --no-dev
 - **Observability**: Progress events provide visibility into the workflow state
 - **Error Handling**: Centralized error management through error events
 
+## License
+
+MIT

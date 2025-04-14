@@ -17,13 +17,17 @@ classifiers = [
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.9",
 ]
 dependencies = []
 
 [project.urls]
-"Homepage" = "https://github.com/yourusername/microflow"
-"Bug Tracker" = "https://github.com/yourusername/microflow/issues"
+"Homepage" = "https://github.com/vikramsoni2/microflow"
+"Bug Tracker" = "https://github.com/vikramsoni2/microflow/issues"
 
 [tool.hatch.build.targets.wheel]
 packages = ["microflow"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
