@@ -166,6 +166,58 @@ async def risky_handler(event: WorkflowEvent, ctx: Dict[str, Any]):
 
 ## Example Workflow
 
+
+the below workflow processes the user's query for search, then searches for weather if the query is related to weather, and finally generates the response.
+
+
+![Flow Diagram](flow2.png)
+
+![Process Diagram](flow.png)
+
+```python
+import asyncio
+from microflow import WorkflowManager, WorkflowEvent
+
+# Initialize workflow manager
+workflow = WorkflowManager()
+
+# Query handler
+async def query_handler(event, ctx):
+    yield WorkflowEvent.progress("query", f"Processing query: {event.data['query']}")
+    yield WorkflowEvent(name="search", data={"query": event.data["query"]})
+
+# Search handler
+async def search_handler(event, ctx):
+    yield WorkflowEvent.progress("search", f"Searching for: {event.data['query']}")
+    results = ["Result 1", "Result 2", "Result 3"]
+    yield WorkflowEvent(name="generate", data={"query": event.data["query"], "results": results})
+
+# Generate handler
+async def generate_handler(event, ctx):
+    yield WorkflowEvent.progress("generate", "Generating response")
+    response = f"Answer to '{event.data['query']}' based on {len(event.data['results'])} results"
+    yield WorkflowEvent(name="completed", data={"response": response})
+
+# Register handlers
+workflow.register("query", query_handler)
+workflow.register("search", search_handler)
+workflow.register("generate", generate_handler)
+
+# Run workflow
+async def main():
+    initial_event = WorkflowEvent(name="query", data={"query": "How do LLMs work?"})
+    
+    async for event in workflow.process(initial_event):
+        if event.name == "progress":
+            print(f"Progress: {event.data['step']} - {event.data['description']}")
+        elif event.name == "completed":
+            print(f"Result: {event.data['response']}")
+
+if __name__ == "__main__":
+    asyncio.run(main())
+
+```
+
 For more complex examples, see the [examples directory](https://github.com/vikramsoni2/microflow/tree/main/microflow/examples) which includes:
 
 1. A simple agent workflow that processes queries, searches for information, and generates responses
