@@ -47,6 +47,13 @@ if __name__ == "__main__":
 - **Error Handling**: Graceful error propagation
 - **Flexible Workflows**: Easily modify and extend workflows
 - **Minimal Dependencies**: No external dependencies required
+- **Global State**: Shared global state throughout the workflow
+
+
+## Guide
+- [detailed guide](https://github.com/vikramsoni2/microflow/tree/main/GUIDE.md) 
+- [examples directory](https://github.com/vikramsoni2/microflow/tree/main/microflow/examples) 
+
 
 ## Core Components
 
